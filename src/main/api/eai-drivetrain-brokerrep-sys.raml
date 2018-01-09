@@ -1,0 +1,103 @@
+#%RAML 1.0
+title: Drivetrain Broker Rep API
+version: v1
+description: CRUD operations for Broker Rep
+baseUri: https://moapi.hagerty.com/system/drivetrain/brokerrep/v1
+mediaType: application/json
+
+uses:
+  commonTypes: exchange_modules/17972fe6-aa59-42b8-be5d-60b42d39ef55/common-types/1.0.0/common-types-library.raml
+  traitsLib: exchange_modules/17972fe6-aa59-42b8-be5d-60b42d39ef55/common-types/1.0.0/common-traits-library.raml
+  brokerRepType: types/brokerrep-canonical-type.raml
+
+resourceTypes: 
+  ItemPost: !include exchange_modules/17972fe6-aa59-42b8-be5d-60b42d39ef55/common-types/1.0.0/resource-types/item-post-resourceType.raml
+  ItemAccess: !include exchange_modules/17972fe6-aa59-42b8-be5d-60b42d39ef55/common-types/1.0.0/resource-types/item-access-resourceType.raml
+
+types:
+  BrokerRep: brokerRepType.BrokerRep
+
+/ping:
+  get:
+    is: [traitsLib.has200Response]
+  
+/brokerrep:
+  type: { ItemPost:
+  {
+      "typeName": "BrokerRep", 
+      "exampleName": !include examples/brokerrep-example.json
+    } 
+  }
+  post:
+    responses: 
+      201:
+        body: 
+          application/json:
+            example: |
+               {  
+                  "successful":true,
+                  "messages":[  
+                       {  
+                         "message":"a message"
+                       }
+                     ],
+                  "brokerRepIds":[  
+                     {  
+                        "brokerRepId":1,
+                        "sourceSystem":"Auto_US"
+                     }
+                   ]
+                }
+
+  /{brokerRepId}:
+    type: { ItemAccess:
+      {
+        "typeName": "BrokerRep", 
+        "exampleName": !include examples/brokerrep-example.json
+      } 
+    }
+    put:
+      responses: 
+        201:
+          body: 
+            application/json:
+              example: |
+                 {  
+                    "successful":true,
+                    "messages":[  
+                        {  
+                          "message":"a message"
+                        }
+                      ],
+                    "brokerRepIds":[  
+                     {  
+                        "brokerRepId":1,
+                        "sourceSystem":"Auto_US"
+                     }
+                   ]
+                  }
+    delete:
+      responses: 
+        202:
+          body: 
+            application/json:
+              example: |
+                    {  
+                       "successful":true,
+                       "messages":[  
+                           {  
+                              "message":"a message"
+                           }
+                         ],
+                       "brokerRepIds":[  
+                          {  
+                             "brokerRepId":1,
+                             "sourceSystem":"Auto_US"
+                          }
+                        ]
+                    }
+
+
+    # Add 501 since  there is no get for broker
+    get:
+      is: [ traitsLib.has501Response ]

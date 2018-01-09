@@ -1,0 +1,17 @@
+#%RAML 1.0 DataType
+
+description: Name of a person
+
+type: object
+properties: 
+  prefix?:
+    type: string
+    enum: [Mr., Ms., Mrs., Dr.]
+  first: string
+  middle?: string
+  last: string
+  suffix?: 
+    type: string
+    enum: [Jr., Sr., MD, DDS, DVM]
+  goesBy?: string
+  

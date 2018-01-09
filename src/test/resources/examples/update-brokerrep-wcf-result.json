@@ -1,0 +1,14 @@
+{
+	"successful": true,
+	"messages": "a message",
+	"sourceSystem": "test",
+	"updateBrokerRepInfo": [
+		{
+			"additionalMessage": "test",
+			"sourceSystem": "Auto_US",
+			"brokerRepLicensedStatePK": "test",
+			"brokerRepPK": "test",
+			"brokerRepRolePK": "test"	
+		}
+	]
+}

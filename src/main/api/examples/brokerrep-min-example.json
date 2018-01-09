@@ -1,0 +1,13 @@
+  {
+    "sourceSystem": "Auto_US",
+    "brokerId": 123,
+    "name": {
+      "prefix": "Mr.",
+      "first": "FirstName",
+      "middle": "MiddleName",
+      "last": "LastName",
+      "suffix": "MD",
+      "goesBy": "First"
+    },
+    "affiliationBrokerId": "A123456"
+  }

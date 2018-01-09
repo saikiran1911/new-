@@ -1,0 +1,17 @@
+#%RAML 1.0 ResourceType
+usage: Use this resourceType to implement post for a single item
+
+uses:
+  traitsLib: ../common-traits-library.raml
+
+description: A single <<resourcePathName|!uppercamelcase>>
+post:
+  description: Create a single <<resourcePathName|!singularize>>
+  is: [ traitsLib.clientIdRequired,
+        traitsLib.has201Response,
+        traitsLib.has400Response,
+        traitsLib.has500Response ]
+  body: 
+    application/json:
+      type: <<typeName>>
+      example: <<exampleName>>

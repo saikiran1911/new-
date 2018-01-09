@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:api-platform-gw="http://www.mulesoft.org/schema/mule/api-platform-gw"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata"
+	xmlns:spring="http://www.springframework.org/schema/beans"
+	xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking"
+	xmlns:ws="http://www.mulesoft.org/schema/mule/ws" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/apikit http://www.mulesoft.org/schema/mule/apikit/current/mule-apikit.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+http://www.mulesoft.org/schema/mule/xml http://www.mulesoft.org/schema/mule/xml/current/mule-xml.xsd
+http://www.mulesoft.org/schema/mule/ws http://www.mulesoft.org/schema/mule/ws/current/mule-ws.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/api-platform-gw http://www.mulesoft.org/schema/mule/api-platform-gw/current/mule-api-platform-gw.xsd">
+	<apikit:config name="eai-drivetrain-brokerrep-sys-config"
+		raml="eai-drivetrain-brokerrep-sys.raml" consoleEnabled="false"
+		doc:name="Router" keepRamlBaseUri="true" />
+	<api-platform-gw:api apiName="${api.name}" version="${api.version}"
+		flowRef="eai-drivetrain-brokerrep-sys-main" create="true"
+		apikitRef="eai-drivetrain-brokerrep-sys-config" doc:name="API Autodiscovery" />
+	<flow name="eai-drivetrain-brokerrep-sys-main">
+		<http:listener config-ref="https-domain-listener"
+			path="/system/drivetrain/brokerrep/v1/*" doc:name="HTTP" />
+		<apikit:router config-ref="eai-drivetrain-brokerrep-sys-config"
+			doc:name="APIkit Router" />
+		<exception-strategy
+			ref="eai-drivetrain-brokerrep-sys-apiKitGlobalExceptionMapping"
+			doc:name="Reference Exception Strategy" />
+	</flow>
+	<flow name="eai-drivetrain-brokerrep-sys-console">
+		<http:listener config-ref="https-domain-listener"
+			path="/console/system/drivetrain/brokerrep/v1/*" doc:name="HTTP" />
+		<apikit:console config-ref="eai-drivetrain-brokerrep-sys-config"
+			doc:name="APIkit Console" />
+	</flow>
+	<flow name="set-transaction-id">
+		<copy-properties propertyName="X-EAI-TRANSACTION-ID"
+			doc:name="Set transactionId" />
+		<logger
+			message="Transaction ID: #[message.inboundProperties.'X-EAI-TRANSACTION-ID']"
+			level="INFO" category="${app.name}" doc:name="Log transaction id" />
+	</flow>
+	<flow name="set-brokerRepId">
+		<flow-ref name="set-transaction-id" doc:name="set-transaction-id" />
+		<set-variable variableName="brokerRepId"
+			value="#[message.inboundProperties.'http.uri.params'.brokerRepId]"
+			doc:name="Set brokerRepId" />
+		<logger message="Broker Rep id is #[flowVars.brokerRepId]"
+			level="INFO" category="${app.name}" doc:name="Logger" />
+	</flow>
+	<flow
+		name="post:/brokerrep:application/json:eai-drivetrain-brokerrep-sys-config">
+		<logger
+			message="Request started: #[message.inboundProperties.'http.request.path']"
+			level="INFO" category="${app.name}" doc:name="Log request start" />
+		<flow-ref name="set-transaction-id" doc:name="set-transaction-id" />
+		<dw:transform-message doc:name="Transform Message"
+			metadata:id="6a8dbaf3-6ec3-4b86-bdba-636c91e69baf">
+			<dw:input-payload mimeType="application/json" doc:sample="examples/create-brokerrep.json"/>
+			<dw:input-variable mimeType="application/java"
+				variableName="sourceSystem" />
+			<dw:set-payload><![CDATA[%dw 1.0
+%output application/xml
+%namespace ns0 https://services.hagerty.com/hub/Membership/
+%namespace ns1 http://schemas.datacontract.org/2004/07/CRMIntegration.Broker.Contracts.ServiceCalls
+---
+{
+	ns0#CreateBrokerRep: {
+		ns0#requestMessage: {
+			ns1#BrokerId: payload.brokerId,
+			ns1#SalesforceAccountId: payload.meta.sfAccountId as :number,
+			ns1#SourceSystem: payload.meta.sourceSystem,
+			ns1#AffiliationBrokerID: payload.affiliationBrokerId,
+			ns1#FirstName: payload.name.first,
+			ns1#GoesByName: payload.name.goesBy,
+			ns1#LKNamePrefixFK: payload.name.prefix,
+			ns1#LKNameSuffixFK: payload.name.suffix,
+			ns1#LastName: payload.name.last,
+			ns1#MiddleName: payload.name.middle,
+			ns1#SalesforceContactId: payload.meta.sfContactId as :number
+		}
+	}
+}]]></dw:set-payload>
+		</dw:transform-message>
+        <logger message="Payload being sent to web service #[payload]" level="TRACE" category="${app.name}" doc:name="Log Payload"/>
+        <ws:consumer config-ref="Broker_Rep_Web_Service_Consumer" operation="CreateBrokerRep" doc:name="Call CreateBrokerRep"/>
+		<dw:transform-message doc:name="Transform Message"
+			metadata:id="fb4669a1-88f0-4723-90b0-df166f08e0db">
+			<dw:set-payload><![CDATA[%dw 1.0
+%output application/json skipNullOn="everywhere"
+%namespace ns0 https://services.hagerty.com/hub/Membership/
+%namespace ns1 http://schemas.datacontract.org/2004/07/CRMIntegration.Shared.Contracts
+%namespace ns2 http://schemas.datacontract.org/2004/07/CRMIntegration.Broker.Contracts.ServiceCalls
+---
+{
+	successful: payload.ns0#CreateBrokerRepResponse.ns0#CreateBrokerRepResult.ns1#Successful,
+	messages: [{
+		message: payload.ns0#CreateBrokerRepResponse.ns0#CreateBrokerRepResult.ns1#Messages
+	}],
+	brokerRepIds: payload.ns0#CreateBrokerRepResponse.ns0#CreateBrokerRepResult.ns2#BrokerReps.*ns2#NewBrokerRepModel default [] map ((newBrokerRepModel , indexOfNewBrokerRepModel) -> {
+		brokerRepId: newBrokerRepModel.ns2#BrokerRepPK,
+		sourceSystem: newBrokerRepModel.ns2#SourceSystem as :string
+	})
+}
+]]></dw:set-payload>
+		</dw:transform-message>
+        <logger message="Payload returned by web service #[message.payloadAs(java.lang.String)]" level="TRACE" category="${app.name}" doc:name="Log final result"/>
+        <set-property propertyName="Content-Type" value="application/json" doc:name="Set content type"/>
+        <logger message="Request completed: #[message.inboundProperties.'http.request.path']" level="TRACE" category="${app.name}" doc:name="Log request end"/>
+
+	</flow>
+	<flow
+		name="put:/brokerrep/{brokerRepId}:application/json:eai-drivetrain-brokerrep-sys-config">
+		<logger
+			message="Request started sys: #[message.inboundProperties.'http.request.path']"
+			level="INFO" category="${app.name}" doc:name="Log request start" />
+		<flow-ref name="set-transaction-id" doc:name="set-transaction-id" />
+        <dw:transform-message doc:name="Transform Message" metadata:id="506f5fca-78e9-40e7-8186-903619305819">
+            <dw:input-payload mimeType="application/json" doc:sample="examples/update-brokerrep.json"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/xml
+%namespace ns0 https://services.hagerty.com/hub/Membership/
+%namespace ns1 http://schemas.datacontract.org/2004/07/CRMIntegration.Broker.Contracts
+%namespace ns2 http://schemas.datacontract.org/2004/07/CRMIntegration.Broker.Contracts.ServiceCalls
+---
+{
+	ns0#UpdateBrokerRepInformation: {
+		ns0#requestMessage: {
+			ns1#SalesforceContactId: payload.meta.sfContactId as :number,
+			ns1#SourceSystem: payload.meta.sourceSystem,
+			ns2#AffiliationBrokreID: payload.affiliationBrokerId
+		}
+	}
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <logger message="Payload being sent to web service #[payload]" level="TRACE" category="${app.name}" doc:name="Log Payload"/>
+        <ws:consumer config-ref="Broker_Rep_Web_Service_Consumer" operation="UpdateBrokerRepInformation" doc:name="Call UpdateBrokerRep"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="bd240e73-77ee-43ad-a1ed-f9d32e2daffe">
+            <dw:input-payload doc:sample="sample_data/UpdateBrokerRepInformationResponse.xml"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json skipNullOn="everywhere"
+%namespace ns0 https://services.hagerty.com/hub/Membership/
+%namespace ns1 http://schemas.datacontract.org/2004/07/CRMIntegration.Shared.Contracts
+%namespace ns2 http://schemas.datacontract.org/2004/07/CRMIntegration.Broker.Contracts.ServiceCalls
+---
+{
+	successful: payload.ns0#UpdateBrokerRepInformationResponse.ns0#UpdateBrokerRepInformationResult.ns1#Successful,
+	messages: payload.ns0#UpdateBrokerRepInformationResponse.ns0#UpdateBrokerRepInformationResult.ns1#Messages,
+	sourceSystem: payload.ns0#UpdateBrokerRepInformationResponse.ns0#UpdateBrokerRepInformationResult.ns2#UpdateBrokerRepInformation.ns2#UpdateBrokerRepInformationModel.ns2#SourceSystem,
+	updateBrokerRepInfo: payload.ns0#UpdateBrokerRepInformationResponse.ns0#UpdateBrokerRepInformationResult.ns2#UpdateBrokerRepInformation.*ns2#UpdateBrokerRepInformationModel default [] map ((updateBrokerRepInformationModel , indexOfUpdateBrokerRepInformationModel) -> {
+		additionalMessage: updateBrokerRepInformationModel.ns2#AdditionalMessage,
+		sourceSystem: updateBrokerRepInformationModel.ns2#SourceSystem,
+		brokerRepLicensedStatePK: updateBrokerRepInformationModel.ns2#BrokerRepLicensedStatePK as :string,
+		brokerRepPK: updateBrokerRepInformationModel.ns2#BrokerRepPK as :string,
+		brokerRepRolePK: updateBrokerRepInformationModel.ns2#BrokerRepRolePK as :string
+	})
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <logger message="Payload returned by web service #[message.payloadAs(java.lang.String)]" level="TRACE" category="${app.name}" doc:name="Log final result"/>
+		<set-property propertyName="Content-Type" value="application/json"
+			doc:name="Set content type" />
+		<logger
+			message="Request completed: #[message.inboundProperties.'http.request.path']"
+			level="INFO" category="${app.name}" doc:name="Log request end" />
+	</flow>
+	<flow
+		name="delete:/brokerrep/{brokerRepId}:eai-drivetrain-brokerrep-sys-config">
+		<logger
+			message="Request started: #[message.inboundProperties.'http.request.path']"
+			level="INFO" category="${app.name}" doc:name="Log request start" />
+		<flow-ref name="set-transaction-id" doc:name="set-transaction-id" />
+		<dw:transform-message doc:name="Transform Message"
+			metadata:id="6a8dbaf3-6ec3-4b86-bdba-636c91e69baf">
+			<dw:input-payload mimeType="application/json" />
+			<dw:input-variable mimeType="application/java"
+				variableName="sourceSystem" />
+			<dw:set-payload><![CDATA[%dw 1.0
+%output application/xml
+%namespace ns0 https://services.hagerty.com/hub/Membership/
+%namespace ns1 http://schemas.datacontract.org/2004/07/CRMIntegration.Broker.Contracts.ServiceCalls
+---
+{
+	ns0#CreateBrokerRep: {
+		ns0#requestMessage: {
+			ns1#BrokerId: payload.brokerId,
+			ns1#SalesforceAccountId: payload.salesForceAccountId,
+			ns1#AffiliationBrokerID: payload.affiliationBrokerId,
+			ns1#BrokerID: payload.brokerId as :number,
+			ns1#FirstName: payload.name.first,
+			ns1#GoesByName: payload.name.goesBy,
+			ns1#LKNamePrefixFK: payload.name.prefix,
+			ns1#LKNameSuffixFK: payload.name.suffix,
+			ns1#LastName: payload.name.last,
+			ns1#MiddleName: payload.name.middle,
+			ns1#SourceSystem: payload.sourceSystem
+		}
+	}
+}]]></dw:set-payload>
+		</dw:transform-message>
+		<logger message="Payload being sent to web service #[payload]"
+			level="TRACE" category="${app.name}" doc:name="Log Payload" />
+        <ws:consumer config-ref="Broker_Rep_Web_Service_Consumer" operation="CreateBrokerRep" doc:name="Call CreateBrokerRep"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="8046c92c-f5ac-4477-b92e-d18f95f5e659">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+%namespace ns0 https://services.hagerty.com/hub/Membership/
+%namespace ns1 http://schemas.datacontract.org/2004/07/CRMIntegration.Shared.Contracts
+%namespace ns2 http://schemas.datacontract.org/2004/07/CRMIntegration.Broker.Contracts.ServiceCalls
+---
+{
+	successful: payload.ns0#CreateBrokerRepResponse.ns0#CreateBrokerRepResult.ns1#Successful,
+	messages: payload.ns0#CreateBrokerRepResponse.ns0#CreateBrokerRepResult.ns1#Messages,
+	sourceSystem: payload.ns0#CreateBrokerRepResponse.ns0#CreateBrokerRepResult.ns2#BrokerReps.ns2#NewBrokerRepModel.ns2#SourceSystem,
+	updateBrokerRepInfo: payload.ns0#CreateBrokerRepResponse.ns0#CreateBrokerRepResult.ns2#BrokerReps.*ns2#NewBrokerRepModel map ((newBrokerRepModel , indexOfNewBrokerRepModel) -> {
+		brokerRepPK: newBrokerRepModel.ns2#BrokerRepPK as :string
+	})
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <logger message="Payload returned by web service #[message.payloadAs(java.lang.String)]" level="TRACE" category="${app.name}" doc:name="Log final result"/>
+		<set-property propertyName="Content-Type" value="application/json"
+			doc:name="Set content type" />
+		<logger
+			message="Request completed: #[message.inboundProperties.'http.request.path']"
+			level="INFO" category="${app.name}" doc:name="Log request end" />
+	</flow>
+	<flow
+		name="get:/brokerrep/{brokerRepId}:eai-drivetrain-brokerrep-sys-config">
+		<logger
+			message="Request started: #[message.inboundProperties.'http.request.path']"
+			level="INFO" category="${app.name}" doc:name="Log request start" />
+		<set-property propertyName="http.status" value="501"
+			doc:name="Property" />
+		<set-payload value="{ &quot;message&quot;: &quot;Not implemented&quot; }"
+			doc:name="Set Payload" />
+		<logger message="Request completed: get:/brokerreps/{brokerRepId}"
+			level="INFO" category="${app.name}" doc:name="Log request end" />
+	</flow>
+	<flow name="get:/ping:eai-drivetrain-brokerrep-sys-config">
+		<set-payload value="#['success']" doc:name="Set Payload" />
+		<logger message="Request started: get:/ping" level="INFO"
+			category="${app.name}" doc:name="Log request start" />
+	</flow>
+
+</mule>

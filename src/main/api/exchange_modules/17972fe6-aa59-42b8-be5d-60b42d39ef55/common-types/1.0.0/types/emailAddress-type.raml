@@ -1,0 +1,11 @@
+#%RAML 1.0 DataType
+
+description: Email address
+
+type: object
+properties: 
+  email: string
+  emailType?:
+    type: string
+    enum: [UNKN, HOME, SCHL, BUSI]
+    default: UNKN

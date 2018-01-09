@@ -1,0 +1,40 @@
+#%RAML 1.0 ResourceType
+usage: Use this resourceType to implement get/put/delete for a single item
+
+uses:
+  traitsLib: ../common-traits-library.raml
+
+description: A single <<resourcePathName|!uppercamelcase>>
+get:
+  description: Get a single <<resourcePathName|!singularize>>
+  is: [ traitsLib.clientIdRequired,
+        traitsLib.has200Response,
+        traitsLib.has404Response,
+        traitsLib.has500Response ]
+  responses: 
+    200:
+      body: 
+        application/json:
+          type: <<typeName>>
+          example: <<exampleName>>
+
+put:
+  description: Update a single <<resourcePathName|!singularize>>
+  is: [ traitsLib.clientIdRequired,
+        traitsLib.has200Response,
+        traitsLib.has204Response,
+        traitsLib.has400Response,
+        traitsLib.has404Response,
+        traitsLib.has500Response ]
+  body: 
+    application/json:
+      type: <<typeName>>
+      example: <<exampleName>>
+
+delete:
+  description: Delete a single <<resourcePathName|!singularize>>
+  is: [ traitsLib.clientIdRequired,
+        traitsLib.has200Response,
+        traitsLib.has204Response,
+        traitsLib.has404Response,
+        traitsLib.has500Response ]

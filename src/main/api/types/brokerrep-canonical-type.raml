@@ -1,0 +1,67 @@
+#%RAML 1.0 Library
+usage: Defines canonical model for the Broker Rep type
+
+uses:
+  commonTypes: ../exchange_modules/17972fe6-aa59-42b8-be5d-60b42d39ef55/common-types/1.0.0/common-types-library.raml
+
+types: 
+  LicensedState:
+    type: object
+    properties: 
+      stateRegion: string
+      effectiveDate: datetime
+      expirationDate?: datetime
+      isNonResident: boolean
+      homeIndicator: boolean
+      expDateNotRequiredIndicator: boolean
+
+  InsuranceLicense:
+    type: object
+    properties: 
+      stateRegion: string
+      licenseNumber?: string
+      licenseType?:
+        type: string
+        enum: [UNKN, P&C, License]
+      effectiveDate: datetime
+      expirationDate?: datetime
+
+  BrokerRepRole:
+    type: string
+    enum: [PRIN, PROD, ADMIN, CSR, FIN, SALES, OTHER, PM, ACCT, ITMGR, NOTFY, ISSUE, EXPMO, QUOTE, PBMO]
+
+  BrokerRep:  
+    description: Model for creating/updating a broker rep
+    type: object
+    properties: 
+      name: commonTypes.PersonName
+      sourceSystem: string
+      brokerId: number
+      affiliationBrokerId: string
+      agencyDBA: string
+      agencyName: string
+      agencyStatus: string
+      url: string
+      roles?: BrokerRepRole[]
+      licensedStates?: LicensedState[]
+      insuranceLicenses?: InsuranceLicense[]
+      emails?: 
+        type: commonTypes.EmailAddress[]
+        minItems: 1
+        uniqueItems: true
+      phones?: 
+        type: commonTypes.Phone[]
+        minItems: 1
+        uniqueItems: true
+      addresses?: 
+        type: commonTypes.Address[]
+        minItems: 1
+        uniqueItems: true
+      meta?:
+        type: object
+        properties: 
+          sfAccountId?: string
+          sfContactId?: string
+          legacyId?: string
+          sourceSystem: commonTypes.SourceSystem
+        

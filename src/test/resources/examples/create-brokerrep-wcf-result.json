@@ -1,0 +1,10 @@
+{
+	"successful": true,
+	"messages": "a message",
+	"brokerRepIds": [
+		{
+			"brokerRepId": 1,
+			"sourceSystem": "Auto_US" 
+		}
+	]
+}

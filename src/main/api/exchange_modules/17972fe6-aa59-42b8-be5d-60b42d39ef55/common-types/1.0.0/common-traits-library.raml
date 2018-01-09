@@ -1,0 +1,70 @@
+#%RAML 1.0 Library
+usage: Library of traits
+
+uses:
+  commonTypes: common-types-library.raml
+  
+traits: 
+  clientIdRequired:
+    headers:
+      client_id:
+        type: string
+      client_secret:
+        type: string
+
+  has200Response:
+    responses: 
+      200:
+        description: OK
+
+  has200ResponseWithBody:
+    responses: 
+      200:
+        description: OK
+        body: 
+          application/json:
+            type: <<typeName>>
+            example: <<exampleName>>
+
+  has201Response:
+    responses: 
+      201:
+        description: Created
+
+  has204Response:
+    responses: 
+      204:
+        description: Updated
+
+  has400Response:
+    responses: 
+      400:
+        description: Bad Request
+        body:
+          application/json:
+            type: commonTypes.ErrorMessage[]
+            default: [ { message: "Bad Request", remediation: "Check for invalid parameters" } ]
+
+  has404Response:
+    responses: 
+      404:
+        description: Not Found
+        body:
+          application/json:
+            type: commonTypes.ErrorMessage[]
+            default: [ { message: "Not Found", remediation: "Check for invalid parameters" } ]
+
+  has500Response:
+    responses: 
+      500:
+        description: Internal Server Error
+        body: 
+          application/json:
+            type: commonTypes.ErrorMessage[]
+            default: [ { message: "Internal Server Error", remediation: "Try the request again later" } ]
+
+  has501Response:
+    responses: 
+      501:
+        description: Not Implemented      
+

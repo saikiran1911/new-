@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ns0:UpdateBrokerRepInformationResponse xmlns:ns0="https://services.hagerty.com/hub/Membership/">
+  <ns0:UpdateBrokerRepInformationResult>
+    <ns1:Messages xmlns:ns1="http://schemas.datacontract.org/2004/07/CRMIntegration.Shared.Contracts">????</ns1:Messages>
+    <ns1:Successful xmlns:ns1="http://schemas.datacontract.org/2004/07/CRMIntegration.Shared.Contracts">true</ns1:Successful>
+    <ns2:UpdateBrokerRepInformation xmlns:ns2="http://schemas.datacontract.org/2004/07/CRMIntegration.Broker.Contracts.ServiceCalls"/>
+  </ns0:UpdateBrokerRepInformationResult>
+</ns0:UpdateBrokerRepInformationResponse>

@@ -1,0 +1,14 @@
+#%RAML 1.0 DataType
+
+description: Phone number
+
+type: object
+properties: 
+  areaCode: string
+  prefix: string
+  suffix: string
+  extension?: string
+  phoneType?:
+    type: string
+    enum: [UNKN, HOME, BUS, DAY, EVE, FAX, CELL, BEST]
+    default: UNKN
